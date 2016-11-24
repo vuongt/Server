@@ -103,20 +103,3 @@ CREATE TABLE users_token (
 )ENGINE=INNODB;
 
 
-INSERT INTO users (first_name, last_name, tel,password)
-    VALUES ('Anna','Dupont','06666','aaaa'),
-            ('Bob','Dupont','07777','bbbb');
-
-INSERT INTO apps (app_name, creator_id, description)
-VALUES ('App1','1','description app1'),
-        ('App2','2','description app2'),
-        ('App3','1','description app3'),
-        ('App4','1','description app4'),
-        ('App5','2','description app5');
-
-INSERT INTO apps_users (user_id,app_id)
-VALUES ('1','1'),('2','1'),('2','2'),('1','3'),('1','4'),('2','4'),('2','5');
-
-INSERT INTO apps_admins (admin_id,app_id)
-VALUES ('1','1'),('2','2'),('1','3'),('1','4'),('2','5');
-
