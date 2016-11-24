@@ -3,6 +3,7 @@ use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
 require '../vendor/autoload.php';
+set_include_path(':/Applications/MAMP/bin/php/php5.6.27/lib/php:/home/app-server/Server/src/classes/:/home/app-server/Server/res/');
 //setup auto loading
 spl_autoload_register(function($classname){
 	require ("../classes/".$classname.".php");
@@ -59,7 +60,9 @@ $container['dbLog'] = function($c) {
 
 $app->get('/', function (Request $request, Response $response) {
     echo "hello";
+    echo get_include_path();
     return $response->withHeader(200, "hello");
+
 });
 
 $app->get('/hello/{name}', function (Request $request, Response $response) {
