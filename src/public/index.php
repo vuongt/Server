@@ -2,14 +2,14 @@
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
-require __DIR__.'/../vendor/autoload.php';
-set_include_path(':/Applications/MAMP/bin/php/php5.6.27/lib/php:/home/app-server/Server/src/classes/:/home/app-server/Server/res/');
+require '../vendor/autoload.php';
+set_include_path('');
 //setup auto loading
 spl_autoload_register(function($classname){
-	require (__DIR__."/../classes/".$classname.".php");
+	require ("../classes/".$classname.".php");
 });
-require_once (__DIR__."/../classes/tokenHandler.php");
-require_once (__DIR__."/../classes/Constants.php");
+require_once ("../classes/tokenHandler.php");
+require_once ("../classes/Constants.php");
 
 date_default_timezone_set('UTC');
 
@@ -33,21 +33,21 @@ $container = $app->getContainer(); //this gathers and holds all the dependencies
 $container['log'] = function($c) {
     //set up the dependency when it is called for the first time
     $logger = new \Monolog\Logger('Main');
-    $logger->pushHandler(new \Monolog\Handler\StreamHandler(__DIR__."/../logs/app.log"));
+    $logger->pushHandler(new \Monolog\Handler\StreamHandler("../logs/app.log"));
     return $logger;
 };
 
 $container['fileLog'] = function($c) {
     //set up the dependency when it is called for the first time
     $logger = new \Monolog\Logger('FileHandler');
-    $logger->pushHandler(new \Monolog\Handler\StreamHandler(__DIR__."/../logs/app.log"));//log all error to a file called logs/app.log
+    $logger->pushHandler(new \Monolog\Handler\StreamHandler("../logs/app.log"));//log all error to a file called logs/app.log
     return $logger;
 };
 
 $container['dbLog'] = function($c) {
     //set up the dependency when it is called for the first time
     $logger = new \Monolog\Logger('DbHandler');
-    $logger->pushHandler(new \Monolog\Handler\StreamHandler(__DIR__."/../logs/app.log"));//log all error to a file called logs/app.log
+    $logger->pushHandler(new \Monolog\Handler\StreamHandler("../logs/app.log"));//log all error to a file called logs/app.log
     return $logger;
 };
 
@@ -60,9 +60,7 @@ $container['dbLog'] = function($c) {
 
 $app->get('/', function (Request $request, Response $response) {
     echo "hello";
-    echo get_include_path();
     return $response->withHeader(200, "hello");
-
 });
 
 $app->get('/hello/{name}', function (Request $request, Response $response) {
