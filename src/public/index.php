@@ -68,16 +68,14 @@ $app->get('/hello/{name}', function (Request $request, Response $response) {
     $message = "Hello, $name";
     $data=array();
     $data['message']= $message;
-    $this->log->addInfo("Hello world is called");
+    $this->log->addInfo("Hello name is called");
     $response = $response->withJson($data);
-    print_r($response);
     return $response;
 });
 
 $app->get('/user', function(Request $req, Response $res){
     $this->log->addInfo("/user headers ". implode(",", $req->getHeader('Authorization')));
     $jwt = extractTokenFromHeader($req);
-    $this->log->addInfo("jwt ". $jwt);
     if ($jwt){
         $userId = getUserIdFromToken($jwt);
 
