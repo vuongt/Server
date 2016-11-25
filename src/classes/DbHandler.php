@@ -581,21 +581,24 @@ class DbHandler {
         } else if ($details["type"] =="poll"){
             $this->log->addInfo("Get list of vote modules for container ".$containerId);
             $modules = array();
-            $stmt2 = $this->conn->prepare("SELECT id, title, description FROM vote_module WHERE container_id= ? ");
+            $stmt2 = $this->conn->prepare("SELECT id, title, description,expire_date,is_expired FROM vote_module WHERE container_id= ? ");
             $stmt2->bind_param("i", $containerId);
             if ($stmt2->execute()) {
                 $this->log->addInfo("Query ok");
-                $stmt2->bind_result($moduleId, $moduleName, $description);
+                $stmt2->bind_result($moduleId, $moduleName, $description, $expire_date, $is_expired);
                 $this->log->addInfo($stmt2->num_rows);
                 while ($stmt2->fetch()){
                     $module = array();
                     $module["id"]= $moduleId;
                     $module["title"] = $moduleName;
                     $module["description"]=$description;
+                    $module["expire_date"]=$expire_date;
+                    $module["is_expired"]=$is_expired;
                     $modules[] = $module;
                 }
                 $stmt2->close();
                 $details["modules"] = $modules;
+
             } else return null;
         }
         //TODO for other type
@@ -680,13 +683,14 @@ class DbHandler {
         $stmt->bind_param("i",$container_id);
         $listsId = array();
         if($stmt->execute()){
-            $stmt->bind_result($title,$description);
+            $stmt->bind_result($id,$title,$description,$expire_date);
             while($stmt->fetch()){
                 $listId = array();
                 $this->log->addInfo("The title is". $title);
-                $listId["id"]=$title;
+                $listId["id"]=$id;
                 $listId["title"]=$title;
                 $listId["description"]=$description;
+                $listId["expire_date"]=$expire_date;
                 $listsId[]=$listId;
             }
             $stmt->close();
@@ -697,10 +701,10 @@ class DbHandler {
         }
 
 
-        public function createVote($title,$description,$container_id){
+        public function createVote($title,$description,$container_id,$expire_date){
             $this->log->addInfo("creating a vote");
-            $stmt = $this->conn->prepare("INSERT INTO vote_module (title,description,container_id) VALUES (?,?,?)");
-            $stmt->bind_param('ssi',$title,$description,$container_id);
+            $stmt = $this->conn->prepare("INSERT INTO vote_module (title,description,container_id,expire_date) VALUES (?,?,?,?)");
+            $stmt->bind_param('ssis',$title,$description,$container_id,$expire_date);
             if ($stmt->execute()) {
                 $voteId = $stmt->insert_id;
                 $this->log->addInfo("vote created");
@@ -758,6 +762,7 @@ class DbHandler {
                 $option["value"]=$num_vote;
                 $options[] = $option;
             }
+            $stmt->close();
             return $options;
         }
         return null;
@@ -782,6 +787,62 @@ class DbHandler {
         return false;
     }
 
+    public function setToExpirePoll(){
+        $this->log->addInfo("set to true all the expired polls");
+        $stmt = $this->conn->prepare( "SELECT id FROM vote_module WHERE expire_date <= DATE(now()) AND is_expired=FALSE" );
+        if($stmt->execute()){
+            $votes_expired=array();
+            $this->log->addInfo("Query ok");
+            $stmt->bind_result($id);
+            while($stmt->fetch()){
+                $votes_expired[]=$id;
+            }
+            $stmt->close();
+            foreach ($votes_expired as $value) {
+                echo $value;
+                $stmt2 = $this->conn->prepare("UPDATE vote_module SET is_expired = TRUE  WHERE id = ?");
+                $stmt2->bind_param("i",$value);
+                $stmt2->execute();
+                $this->log->addInfo("UPDATED VOTE MODULE EXPIRED");
+
+                # code...
+            }
+            $stmt2->close();
+
+            return true;
+        }
+        return false;
+    }
+
+    public function addUserWhoVoted($moduleId,$userId){
+        $this->log->addInfo("adding users who voted");
+        $stmt = $this->conn->prepare("INSERT INTO vote_options_users(vote_id,user_id) VALUES(?,?)");
+        $stmt->bind_param("ii",$moduleId,$userId);
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
+
+    }
+
+    public function getUsersWhoVoted($vote_id){
+        $who_voted=array();
+        $stmt3 = $this->conn->prepare("SELECT user_id FROM vote_options_users WHERE vote_id= ?");
+        $stmt3->bind_param("i", $vote_id);
+        if ($stmt3->execute()) {
+            $this->log->addInfo("Query ok");
+            $stmt3->bind_result($userId);
+            while($stmt3->fetch()){
+                $who_voted[]=$userId;
+            }
+            $stmt3->close();
+            return $who_voted;
+        }
+        return null;
+    }
 }
+
+
+
 
 ?>

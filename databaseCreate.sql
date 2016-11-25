@@ -53,8 +53,8 @@ CREATE TABLE vote_module (
     description VARCHAR(2000),
     vote_answer_id MEDIUMINT NULL,
     container_id MEDIUMINT DEFAULT 0,
-    create_date DATETIME,
-    expire_date DATETIME,
+    expire_date DATE,
+    is_expired Boolean default False,
     PRIMARY KEY (id)
 
 )ENGINE=INNODB;
@@ -64,6 +64,13 @@ CREATE TABLE vote_options (
     name VARCHAR(50) NOT NULL,
     vote_id MEDIUMINT NOT NULL,
     num_votes int default 0,
+    PRIMARY KEY (id)
+)ENGINE=INNODB;
+
+CREATE TABLE vote_options_users (
+    id MEDIUMINT NOT NULL AUTO_INCREMENT,
+    vote_id MEDIUMINT NOT NULL,
+    user_id MEDIUMINT NOT NULL,
     PRIMARY KEY (id)
 )ENGINE=INNODB;
 

@@ -8,11 +8,8 @@ set_include_path('');
 spl_autoload_register(function($classname){
 	require ("../classes/".$classname.".php");
 });
-
-require ("../classes/tokenHandler.php");
-require ("../classes/Constants.php");
-require ("../classes/config.php");
-
+require_once ("../classes/tokenHandler.php");
+require_once ("../classes/Constants.php");
 
 date_default_timezone_set('UTC');
 
@@ -517,9 +514,8 @@ $app->post('/module/vote/addVote', function(Request $req, Response $res){
     $title = $_POST["title"];
     $description = $_POST["description"];
     $container_id = $_POST["container_id"];
-    //$start_date= $_POST["start_date"];
-    //$end_date= $_POST["end_date"];
-    $voteId = $db->createVote($title,$description,$container_id);
+    $expire_date=date('Y-m-d',strtotime($_POST["expire_date"]));
+    $voteId = $db->createVote($title,$description,$container_id,$expire_date);
     if($voteId){
         $this->log->addInfo("Created vote");
         return $res->withJson(["voteId"=>$voteId]);
@@ -567,10 +563,14 @@ $app->post('/module/vote/addOption', function(Request $req, Response $res){
 });
 
 $app->get('/module/vote/increment', function(Request $req, Response $res){
-    $optionId = $req->getQueryParam("optionId", 0);
+    $optionId = $req->getQueryParam("optionId");
+    $moduleId = $req->getQueryParam("moduleId");
+    $userId = $req->getQueryParam("userId");
     $db = new DbHandler($this->dbLog);
     if($db->incrementVoteOption($optionId)){
-        return $res->withHeader(200, "OK");
+        if($db->addUserWhoVoted($moduleId,$userId)){
+            return $res->withHeader(200, "OK");
+        }
     }
     return $res->withHeader(400, "Bad request");
 
@@ -587,6 +587,23 @@ $app->post('/module/vote/update', function(Request $req, Response $res){
     return $res->withHeader(500);
 
 });
+
+$app->get('/module/vote/expiredornotexpired', function(Request $req, Response $res){
+    $db = new DbHandler($this->dbLog);
+    if($db->setToExpirePoll()){
+        return $res->withHeader(200, "update success");
+    }
+    return $res->withHeader(500);
+
+});
+
+$app->get('/module/vote/usersVoters',function(Request $req, Response $res){
+    $id = $req->getQueryParam("id",0);
+    $db = new DbHandler($this->dbLog);
+    $users_voters=$db->getUsersWhoVoted($id);
+    return $res->withJson($users_voters);
+});
+
 
 $app->run();
 
