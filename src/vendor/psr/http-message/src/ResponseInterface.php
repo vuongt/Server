@@ -65,6 +65,4 @@ interface ResponseInterface extends MessageInterface
      * @return string Reason phrase; must return an empty string if none present.
      */
     public function getReasonPhrase();
-
-
 }

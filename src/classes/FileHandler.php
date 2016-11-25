@@ -25,14 +25,14 @@ class FileHandler{
         $uploadOk = 1;
         $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
         // Check if image file is a actual image or fake image
-        $check = getimagesize($_FILES[$fieldName]["tmp_name"]);
+        /*$check = getimagesize($_FILES[$fieldName]["tmp_name"]);
         if($check !== false) {
             $this->log->addInfo("File is an image - " . $check["mime"] . ".");
             $uploadOk = 1;
         } else {
             $this->log->addInfo("File is not an image.");
             $uploadOk = 0;
-        }
+        }*/
         // Check if file already exists
         if (file_exists($target_file)) {
             $uploadOk = 0;
@@ -77,14 +77,14 @@ class FileHandler{
         $uploadOk = 1;
         $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
         // Check if image file is a actual image or fake image
-        $check = getimagesize($_FILES[$fieldName]["tmp_name"]);
+        /*$check = getimagesize($_FILES[$fieldName]["tmp_name"]);
         if($check !== false) {
             $this->log->addInfo("File is an image - " . $check["mime"] . ".");
             $uploadOk = 1;
         } else {
             $this->log->addInfo("File is not an image.");
             $uploadOk = 0;
-        }
+        }*/
         // Check if file already exists
         if (file_exists($target_file)) {
             $uploadOk = 0;
