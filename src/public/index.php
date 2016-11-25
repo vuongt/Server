@@ -9,6 +9,11 @@ spl_autoload_register(function($classname){
 	require ("../classes/".$classname.".php");
 });
 
+require ("../classes/tokenHandler.php");
+require ("../classes/Constants.php");
+require ("../classes/config.php");
+
+
 date_default_timezone_set('UTC');
 
 $config['displayErrorDetails'] = true; //get informaton about error
