@@ -8,8 +8,6 @@ set_include_path('');
 spl_autoload_register(function($classname){
 	require ("../classes/".$classname.".php");
 });
-require_once ("../classes/tokenHandler.php");
-require_once ("../classes/Constants.php");
 
 date_default_timezone_set('UTC');
 
