@@ -39,7 +39,7 @@ class FileHandler{
             $this->log->addInfo("File already exists");
         }
         // Check file size <5Mb
-        if ($_FILES[$fieldName]["size"] > 5*1024*1024) {
+        if ($_FILES[$fieldName]["size"] > 6*1024*1024) {
             //TODO return code
             $uploadOk = 0;
             $this->log->addInfo("File too big");
@@ -92,7 +92,7 @@ class FileHandler{
         }
         // Check file size less than 5Mb
         $this->log->addInfo("File size is " .$_FILES[$fieldName]["size"]/(1024*1024)). " Mb";
-        if ($_FILES[$fieldName]["size"] > 5*1024*1024) {
+        if ($_FILES[$fieldName]["size"] > 6*1024*1024) {
             //TODO return code
             $uploadOk = 0;
             $this->log->addInfo("File too big");
