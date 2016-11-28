@@ -602,6 +602,39 @@ $app->get('/module/vote/usersVoters',function(Request $req, Response $res){
     return $res->withJson($users_voters);
 });
 
+//===============MODULE BUDGET============
+$app->post('/module/budget/addCost', function(Request $req, Response $res){
+    $containerId = $_POST["containerId"];
+    $description = $_POST["description"];
+    $value = $_POST["value"];
+    $jwt = extractTokenFromHeader($req);
+    $userId = getUserIdFromToken($jwt);
+    $db = new DbHandler($this->dbLog);
+    $cost = $db->addCostModuleBudget($containerId, $description, $value, $userId);
+    return $res->withJson($cost);
+});
+
+$app->post('/module/budget/update', function(Request $req, Response $res){
+    $expenseId = $_POST["expenseId"];
+    $newDescription = $_POST["newDescription"];
+    $newValue =$_POST["newValue"];
+    $db = new DbHandler($this->dbLog);
+    if ($db->updateModuleBudget($expenseId, $newDescription, $newValue)){
+        return $res->withHeader(200, "update success");
+    }
+    return $res->withHeader(500);
+});
+
+$app->get('/module/budget/deleteExpense', function (Request $req, Response $res){
+    $expenseId = $req->getQueryParam("expenseId", 0);
+    $this->log->addInfo("Delete expense number ".$expenseId);
+    $db = new DbHandler($this->dbLog);
+    if ($db->deleteExpense($expenseId)){
+        $this->log->addInfo("Delete expense number ".$expenseId. " done");
+        return $res = $res->withHeader(200, "delete success");
+    }
+    return $res->withHeader(500);
+});
 
 $app->run();
 

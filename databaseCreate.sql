@@ -82,6 +82,16 @@ CREATE TABLE content_sharing_module (
     PRIMARY KEY (id)
 )ENGINE=INNODB;
 
+CREATE TABLE budget_module(
+    id INT NOT NULL AUTO_INCREMENT,
+    user_id VARCHAR(50) NOT NULL,
+    user_name VARCHAR(255),
+    container_id INT NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    value DOUBLE NOT NULL,
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE apps_users (
     user_id MEDIUMINT NOT NULL,
     app_id MEDIUMINT NOT NULL
@@ -108,5 +118,6 @@ CREATE TABLE users_token (
   expire_date DATETIME,
   PRIMARY KEY (id_token)
 )ENGINE=INNODB;
+
 
 

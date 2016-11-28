@@ -600,6 +600,27 @@ class DbHandler {
                 $details["modules"] = $modules;
 
             } else return null;
+        } else if($details["type"]=="budget"){
+            $this->log->addInfo("Get details for container budget ".$containerId);
+            $costs = array();
+            $stmt3 = $this->conn->prepare("SELECT b.id, b.user_id, b.user_name, b.description, b.value FROM budget_module as b WHERE container_id= ? ");
+            $stmt3->bind_param("i", $containerId);
+            if ($stmt3->execute()) {
+                $this->log->addInfo("Query ok");
+                $stmt3->bind_result($id, $user_id, $user_name, $description, $value);
+                $this->log->addInfo("Number of expenses ". $stmt3->num_rows);
+                while ($stmt3->fetch()){
+                    $cost = array();
+                    $cost["id"]= $id;
+                    $cost["userId"]= $user_id;
+                    $cost["description"]=$description;
+                    $cost["userName"]=$user_name;
+                    $cost["value"]=$value;
+                    $costs[] = $cost;
+                }
+                $stmt3->close();
+                $details["expenses"] = $costs;
+            } else return null;
         }
         //TODO for other type
         return $details;
@@ -840,9 +861,49 @@ class DbHandler {
         }
         return null;
     }
+
+    public function addCostModuleBudget($containerId, $description, $value, $userId){
+        $this->log->addInfo("Add cost to container budget". $containerId);
+        $stmt = $this->conn->prepare("SELECT first_name, last_name FROM users WHERE id=?");
+        $stmt->bind_param("i",$userId);
+        if($stmt->execute()){
+            $stmt->bind_result($firstName, $lastName);
+            $stmt->fetch();
+            $userName = $firstName . " ". $lastName;
+            $stmt->close();
+        }
+
+        $stmt1 = $this->conn->prepare("INSERT INTO budget_module(user_id, user_name, container_id, description, budget_module.value) VALUES (?,?,?,?,?)");
+        $stmt1->bind_param("isisd" ,$userId,$userName, $containerId, $description, $value);
+        if($stmt1->execute()){
+            $id = $stmt1->insert_id;
+            return array("id"=>$id, "userId"=>$userId, "userName"=>$userName, "containerId"=>$containerId, "description"=>$description, "value"=>$value);
+        }
+
+        return 0;
+    }
+
+    public function updateModuleBudget($moduleId, $newDescription, $newValue){
+        $stmt = $this->conn->prepare("UPDATE budget_module as b SET b.description = $newDescription AND b.value = $newValue WHERE id = ?");
+        $stmt->bind_param("ssi", $newDescription,$newValue, $moduleId);
+        if ($stmt->execute()) {
+            $stmt->close();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function deleteExpense($expenseId){
+        $stmt = $this->conn->prepare("DELETE FROM budget_module WHERE id = ?");
+        $stmt->bind_param("i", $expenseId);
+        if ($stmt->execute()) {
+            $stmt->close();
+            $this->log->addInfo("Deleted expense number ".$expenseId. " from budget_module");
+        } else {
+            return false;
+        }
+        return true;
+    }
 }
-
-
-
-
 ?>
