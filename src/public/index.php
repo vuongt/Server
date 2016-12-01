@@ -636,5 +636,46 @@ $app->get('/module/budget/deleteExpense', function (Request $req, Response $res)
     return $res->withHeader(500);
 });
 
+//=================MODULE MAP==============
+
+$app->post('/module/map/add', function(Request $req, Response $res){
+    $containerId = $_POST["containerId"];
+    $description = $_POST["description"];
+    $address = $_POST["address"];
+    $lat = $_POST["lat"];
+    $lng = $_POST["lng"];
+    $db = new DbHandler($this->dbLog);
+    $id = $db->addMapModule($containerId, $description, $address, $lat, $lng);
+    return $res->withJson(array("id"=>$id, "containerId"=>$containerId, "description"=>$description, "address"=>$address, "lat"=>$lat, "lng"=>$lng));
+});
+
+$app->get('/module/map/delete', function(Request $req, Response $res){
+    $moduleId = $req->getQueryParam("moduleId",0);
+    $db = new DbHandler($this->dbLog);
+    if($db->deleteMapModule($moduleId)){
+        return $res->withStatus(200, "delete ok");
+    }
+    return $res->withStatus(500, "fail to delete");
+});
+
+//================MODULE CALENDAR===========
+$app->post('/module/calendar/add', function(Request $req, Response $res){
+    $containerId = $_POST["containerId"];
+    $title = $_POST["title"];
+    $date = $_POST["date"];
+    $db = new DbHandler($this->dbLog);
+    $id = $db->addCalendarModule($containerId, $title, $date);
+    return $res->withJson(array("id"=>$id, "containerId"=>$containerId, "title"=>$title, "date"=>$date));
+});
+
+$app->get('/module/calendar/delete', function(Request $req, Response $res){
+    $moduleId = $req->getQueryParam("moduleId",0);
+    $db = new DbHandler($this->dbLog);
+    if($db->deleteCalendarModule($moduleId)){
+        return $res->withStatus(200, "delete ok");
+    }
+    return $res->withStatus(500, "fail to delete");
+});
+
 $app->run();
 

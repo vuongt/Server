@@ -92,6 +92,24 @@ CREATE TABLE budget_module(
     PRIMARY KEY (id)
 );
 
+CREATE TABLE map_module(
+    id INT NOT NULL AUTO_INCREMENT,
+    container_id INT NOT NULL,
+    address VARCHAR(2000),
+    description VARCHAR(2000),
+    lat DOUBLE,
+    lng DOUBLE,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE calendar_module(
+    id INT NOT NULL AUTO_INCREMENT,
+    container_id INT NOT NULL,
+    title VARCHAR(2000),
+    date DATETIME,
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE apps_users (
     user_id MEDIUMINT NOT NULL,
     app_id MEDIUMINT NOT NULL

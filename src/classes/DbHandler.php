@@ -584,9 +584,7 @@ class DbHandler {
             $stmt2 = $this->conn->prepare("SELECT id, title, description,expire_date,is_expired FROM vote_module WHERE container_id= ? ");
             $stmt2->bind_param("i", $containerId);
             if ($stmt2->execute()) {
-                $this->log->addInfo("Query ok");
                 $stmt2->bind_result($moduleId, $moduleName, $description, $expire_date, $is_expired);
-                $this->log->addInfo($stmt2->num_rows);
                 while ($stmt2->fetch()){
                     $module = array();
                     $module["id"]= $moduleId;
@@ -602,30 +600,62 @@ class DbHandler {
             } else return null;
         } else if($details["type"]=="budget"){
             $this->log->addInfo("Get details for container budget ".$containerId);
-            $costs = array();
+            $modules = array();
             $stmt3 = $this->conn->prepare("SELECT b.id, b.user_id, b.user_name, b.description, b.value FROM budget_module as b WHERE container_id= ? ");
             $stmt3->bind_param("i", $containerId);
             if ($stmt3->execute()) {
-                $this->log->addInfo("Query ok");
                 $stmt3->bind_result($id, $user_id, $user_name, $description, $value);
-                $this->log->addInfo("Number of expenses ". $stmt3->num_rows);
                 while ($stmt3->fetch()){
-                    $cost = array();
-                    $cost["id"]= $id;
-                    $cost["userId"]= $user_id;
-                    $cost["description"]=$description;
-                    $cost["userName"]=$user_name;
-                    $cost["value"]=$value;
-                    $costs[] = $cost;
+                    $module = array();
+                    $module["id"]= $id;
+                    $module["userId"]= $user_id;
+                    $module["description"]=$description;
+                    $module["userName"]=$user_name;
+                    $module["value"]=$value;
+                    $modules[] = $module;
                 }
                 $stmt3->close();
-                $details["expenses"] = $costs;
+                $details["expenses"] = $modules;
+            } else return null;
+        } else if($details["type"]=="map") {
+            $this->log->addInfo("Get details for container map " . $containerId);
+            $modules = array();
+            $stmt3 = $this->conn->prepare("SELECT m.id, m.description, m.address, m.lat,m.lng FROM map_module as m WHERE container_id= ? ");
+            $stmt3->bind_param("i", $containerId);
+            if ($stmt3->execute()) {
+                $stmt3->bind_result($id, $description, $address, $lat, $lng);
+                while ($stmt3->fetch()) {
+                    $module = array();
+                    $module["id"] = $id;
+                    $module["description"] = $description;
+                    $module["address"] = $address;
+                    $module["lat"] = $lat;
+                    $module["lng"] = $lng;
+                    $modules[] = $module;
+                }
+                $stmt3->close();
+                $details["modules"] = $modules;
+            } else return null;
+        } else if($details["type"]=="calendar") {
+            $this->log->addInfo("Get details for container calendar " . $containerId);
+            $modules = array();
+            $stmt3 = $this->conn->prepare("SELECT c.id, c.title, c.date FROM calendar_module as c WHERE container_id= ? ");
+            $stmt3->bind_param("i", $containerId);
+            if ($stmt3->execute()) {
+                $stmt3->bind_result($id, $title, $date);
+                while ($stmt3->fetch()) {
+                    $module = array();
+                    $module["id"] = $id;
+                    $module["title"] = $title;
+                    $module["date"] = $date;
+                    $modules[] = $module;
+                }
+                $stmt3->close();
+                $details["modules"] = $modules;
             } else return null;
         }
         //TODO for other type
         return $details;
-
-
     }
 
     public function updateContainer($containerId, $newName){
@@ -900,6 +930,54 @@ class DbHandler {
         if ($stmt->execute()) {
             $stmt->close();
             $this->log->addInfo("Deleted expense number ".$expenseId. " from budget_module");
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    public function addMapModule($containerId, $description, $address, $lat,$lng){
+    $stmt = $this->conn->prepare("INSERT INTO map_module(container_id, description, address, lat, lng) VALUES (?,?,?,?,?)");
+    $stmt->bind_param("issdd", $containerId, $description, $address, $lat,$lng);
+    if ($stmt->execute()) {
+        $id = $stmt->insert_id;
+        $stmt->close();
+        $this->log->addInfo("insert map number ".$id. " to map_module");
+    } else {
+        return 0;
+    }
+    return $id;
+}
+    public function deleteMapModule($moduleId){
+        $stmt = $this->conn->prepare("DELETE FROM map_module WHERE id = ?");
+        $stmt->bind_param("i", $moduleId);
+        if ($stmt->execute()) {
+            $stmt->close();
+            $this->log->addInfo("Deleted map number ".$moduleId. " from map_module");
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    public function addCalendarModule($containerId, $title,$date){
+        $stmt = $this->conn->prepare("INSERT INTO calendar_module (container_id,  title, date) VALUES (?,?,?)");
+        $stmt->bind_param("iss", $containerId, $title, $date);
+        if ($stmt->execute()) {
+            $id = $stmt->insert_id;
+            $stmt->close();
+            $this->log->addInfo("insert calendar number ".$id. " to calendar_module");
+        } else {
+            return 0;
+        }
+        return $id;
+    }
+    public function deleteCalendarModule($moduleId){
+        $stmt = $this->conn->prepare("DELETE FROM calendar_module WHERE id = ?");
+        $stmt->bind_param("i", $moduleId);
+        if ($stmt->execute()) {
+            $stmt->close();
+            $this->log->addInfo("Deleted calendar number ".$moduleId. " from calendar_module");
         } else {
             return false;
         }
