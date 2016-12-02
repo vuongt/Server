@@ -663,9 +663,10 @@ $app->post('/module/calendar/add', function(Request $req, Response $res){
     $containerId = $_POST["containerId"];
     $title = $_POST["title"];
     $date = $_POST["date"];
+    $time = $_POST["time"];
     $db = new DbHandler($this->dbLog);
-    $id = $db->addCalendarModule($containerId, $title, $date);
-    return $res->withJson(array("id"=>$id, "containerId"=>$containerId, "title"=>$title, "date"=>$date));
+    $id = $db->addCalendarModule($containerId, $title, $date, $time);
+    return $res->withJson(array("id"=>$id, "containerId"=>$containerId, "title"=>$title, "date"=>$date, "time"=>$time));
 });
 
 $app->get('/module/calendar/delete', function(Request $req, Response $res){

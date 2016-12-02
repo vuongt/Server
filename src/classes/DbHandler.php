@@ -963,9 +963,9 @@ class DbHandler {
         return true;
     }
 
-    public function addCalendarModule($containerId, $title,$date){
-        $stmt = $this->conn->prepare("INSERT INTO calendar_module (container_id,  title, date) VALUES (?,?,?)");
-        $stmt->bind_param("iss", $containerId, $title, $date);
+    public function addCalendarModule($containerId, $title, $date, $time){
+        $stmt = $this->conn->prepare("INSERT INTO calendar_module (container_id, title, date, time) VALUES (?,?,?,?)");
+        $stmt->bind_param("isss", $containerId, $title, $date, $time);
         if ($stmt->execute()) {
             $id = $stmt->insert_id;
             $stmt->close();

@@ -106,7 +106,8 @@ CREATE TABLE calendar_module(
     id INT NOT NULL AUTO_INCREMENT,
     container_id INT NOT NULL,
     title VARCHAR(2000),
-    date DATETIME,
+    date DATE,
+    time TIME,
     PRIMARY KEY (id)
 );
 
