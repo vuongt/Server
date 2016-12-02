@@ -312,6 +312,7 @@ class DbHandler {
         $this->conn->query("INSERT INTO module_containers (name,type,app_id) VALUES ('Calendar','calendar',".$appId.")");
         $this->conn->query("INSERT INTO module_containers (name,type,app_id) VALUES ('Budget Management','budget',".$appId.")");
         $this->conn->query("INSERT INTO module_containers (name,type,app_id) VALUES ('Chat Box','chat',".$appId.")");
+        $this->conn->query("INSERT INTO module_containers (name,type,app_id) VALUES ('Map','map',".$appId.")");
         return true;
     }
 
@@ -818,6 +819,7 @@ class DbHandler {
         }
         return null;
     }
+
     public function addOptionToModuleVote($moduleId, $option){
         $this->log->addInfo("Add option to module vote". $moduleId);
         $stmt = $this->conn->prepare("INSERT INTO vote_options(name, vote_id, num_votes) VALUES (?,?,0)");
@@ -948,6 +950,7 @@ class DbHandler {
     }
     return $id;
 }
+
     public function deleteMapModule($moduleId){
         $stmt = $this->conn->prepare("DELETE FROM map_module WHERE id = ?");
         $stmt->bind_param("i", $moduleId);
@@ -972,6 +975,7 @@ class DbHandler {
         }
         return $id;
     }
+
     public function deleteCalendarModule($moduleId){
         $stmt = $this->conn->prepare("DELETE FROM calendar_module WHERE id = ?");
         $stmt->bind_param("i", $moduleId);
