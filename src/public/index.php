@@ -204,20 +204,32 @@ $app->post('/createApp', function(Request $req, Response $res){
     $db->addAdminToApp($appId, $creatorId);
     $this->log->addInfo("Created app without media");
     $fileHandler = new FileHandler($this->fileLog);
+    $iconPath ="";
     if ($_POST["icon"]=="default"){
         $iconPath = DEFAULT_ICON_PATH;
     } else if ($_POST["icon"]=="custom"){
         $iconPath = $fileHandler->saveImageToApp($appId,"iconFile");
+        if ($iconPath==null){
+            return $res->withStatus(400, "File too big or wrong format");
+        }
     }
-    $db->saveFileToApp($appId, $iconPath, "image", "icon");
-    $this->log->addInfo("saved icon to ". $iconPath);
+    if($iconPath!=""){
+        $db->saveFileToApp($appId, $iconPath, "image", "icon");
+        $this->log->addInfo("saved icon to ". $iconPath);
+    }
+    $backgroundPath="";
     if ($_POST["background"]=="default"){
         $backgroundPath = DEFAULT_BACKGROUND_PATH;
     } else if ($_POST["background"]=="custom"){
         $backgroundPath = $fileHandler->saveImageToApp($appId, "backgroundFile");
+        if ($iconPath==null){
+            return $res->withStatus(400, "File too big or wrong format");
+        }
     }
-    $db->saveFileToApp($appId, $backgroundPath,"image", "background");
-    $this->log->addInfo("Saved background to ".$backgroundPath);
+    if($backgroundPath!=""){
+        $db->saveFileToApp($appId, $backgroundPath,"image", "background");
+        $this->log->addInfo("Saved background to ".$backgroundPath);
+    }
     return $res->withJson(array("appId"=>$appId));
 });
 
@@ -434,24 +446,21 @@ $app->post('/module/media/upload', function(Request $req, Response $res){
     $type = $_POST["type"];
     $fileHandler  = new FileHandler($this->fileLog);
     $filePath="";
-    if ($type=="image"){
-        $filePath = $fileHandler->saveImageToModule($moduleId, "fileToUpload");
-    } else if($type=="video"){
-        $filePath = $fileHandler->saveVideoToModule($moduleId, "fileToUpload"); //TODO create in file Handler
-    }
+    $filePath = $fileHandler->saveContentToModule($moduleId, "fileToUpload", $type);
     echo $filePath;
     if ($filePath!=""){
         $db = new DbHandler($this->dbLog);
         $id = $db->saveFileToModule($moduleId, $filePath, $type);
-        return $res->withStatus(200, "Image added to module")->withJson(["id"=>$id]);
+        return $res->withStatus(200, "content added to module")->withJson(["id"=>$id, "name"=>basename($_FILES["fileToUpload"]["name"])]);
     }
     return $res->withStatus(500);
 });
 
 $app->get('/module/media/load', function(Request $req, Response $res){
-    $id = $req->getQueryParams("id")["id"];
+    $id = $req->getQueryParam("id",0);
+    $type=$req->getQueryParam("type","");
     $db = new DbHandler($this->dbLog);
-    $listId = $db->getListIdFromModule($id);
+    $listId = $db->getListIdFromModule($id,$type);
     return $res->withJson($listId);
 });
 
@@ -676,6 +685,96 @@ $app->get('/module/calendar/delete', function(Request $req, Response $res){
         return $res->withStatus(200, "delete ok");
     }
     return $res->withStatus(500, "fail to delete");
+});
+
+//===============MODULE FORUM============
+
+$app->post('/module/forum/addForum', function(Request $req, Response $res){
+    $this->log->addInfo("/addForum is called");
+    $db = new DbHandler($this->dbLog);
+    $title = $_POST["title"];
+    $description = $_POST["description"];
+    $container_id = $_POST["container_id"];
+    $jwt = extractTokenFromHeader($req);
+    $creatorId = getUserIdFromToken($jwt);
+    $topic = $db->createTopic($title,$description,$container_id,$creatorId);
+    if($topic){
+        $this->log->addInfo("Created topic");
+        return $res->withJson($topic);
+    }
+    return $res->withStatus(500);
+});
+
+$app->get('/module/forum/deleteForum',function(Request $req, Response $res){
+    $this->log->addInfo("deleteForum is called");
+    $topicId = $req->getQueryParam("topicId",0);
+    $db = new DbHandler($this->dbLog);
+    if($db->deleteForumModule($topicId)){
+        $this->log->addInfo("Deleted topic");
+        return $res->withHeader(200, "Deleted");
+    }
+    return $res->withHeader(404, "Not FOUND");
+});
+
+$app->post('/module/forum/update',function(Request $req, Response $res){
+    $this->log->addInfo("/updateForum is called");
+    $moduleId = $_POST["topicId"];
+    $newTopicName = $_POST["newTopicName"];
+    $db = new DbHandler($this->dbLog);
+    if ($db->updateTopic($moduleId, $newTopicName)){
+        $this->log->addInfo("Updated topic");
+        return $res->withHeader(200, "updated");
+    }
+    return $res->withHeader(500);
+});
+
+$app->get('/module/forum/topic/loadDetails',function(Request $req, Response $res){
+    $topicId = $req->getQueryParam("topicId",0);
+    $this->log->addInfo("load Comments for topic ".$topicId);
+    $db = new DbHandler($this->dbLog);
+    $topicDetails = $db->getTopicDetails($topicId);
+    if($topicDetails){
+        return $res->withJson($topicDetails);
+    } else {
+        return $res->withHeader(401);
+    }
+});
+
+$app->post('/module/forum/topic/addComment',function(Request $req, Response $res){
+    $this->log->addInfo("/addComment is called");
+    $db = new DbHandler($this->dbLog);
+    $comment_text = $_POST["comment_text"];
+    $creator = $_POST["creator"];
+    $topic_id = $_POST["topic_id"];
+    $commentId = $db->createComment($comment_text,$creator,$topic_id);
+    if($commentId){
+        $this->log->addInfo("Created comment");
+        return $res->withJson(["commentId"=>$commentId]);
+    }
+    return $res->withStatus(500);
+});
+
+$app->get('/module/forum/topic/deleteComment',function(Request $req, Response $res){
+    $this->log->addInfo("deleteComment is called");
+    $commentId = $req->getQueryParam("commentId",0);
+    $db = new DbHandler($this->dbLog);
+    if($db->deleteTopicComment($commentId)){
+        $this->log->addInfo("Deleted comment");
+        return $res->withHeader(200, "Deleted");
+    }
+    return $res->withHeader(404, "Not FOUND");
+});
+
+$app->post('/module/forum/topic/update',function(Request $req, Response $res){
+    $this->log->addInfo("/updateComment is called");
+    $commentId = $_POST["commentId"];
+    $newComment = $_POST["newComment"];
+    $db = new DbHandler($this->dbLog);
+    if ($db->updateComment($commentId, $newComment)){
+        $this->log->addInfo("Updated comment");
+        return $res->withHeader(200, "updated");
+    }
+    return $res->withHeader(500);
 });
 
 $app->run();

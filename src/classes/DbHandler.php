@@ -452,17 +452,37 @@ class DbHandler {
         return FALSE;
     }
 
-    public function getListIdFromModule($moduleId){
-        $this->log->addInfo("Get list of content id of module ". $moduleId);
-        $stmt = $this->conn->prepare("SELECT id FROM media_contents WHERE module_id = ?");
-        $stmt->bind_param("i",$moduleId);
-        if($stmt->execute()){
-            $listId = array();
-            $stmt->bind_result($id);
-            while($stmt->fetch()){
-                $listId[] = $id;
+    public function getListIdFromModule($moduleId, $type){
+        if ($type=="image"||$type=="video"){
+            $this->log->addInfo("Get list of content id of module ". $moduleId);
+            $stmt = $this->conn->prepare("SELECT id FROM media_contents WHERE module_id = ?");
+            $stmt->bind_param("i",$moduleId);
+            if($stmt->execute()){
+                $listId = array();
+                $stmt->bind_result($id);
+                while($stmt->fetch()){
+                    $listId[] = $id;
+                }
+                $stmt->close();
+                return $listId;
             }
-            return $listId;
+            return null;
+        } else if ($type=="document"){
+            $this->log->addInfo("Get list of content id of module ". $moduleId);
+            $stmt2 = $this->conn->prepare("SELECT id, path FROM media_contents WHERE module_id = ?");
+            $stmt2->bind_param("i",$moduleId);
+            if($stmt2->execute()){
+                $listId = array();
+                $stmt2->bind_result($id, $path);
+                while($stmt2->fetch()){
+                    $doc = array();
+                    $doc["id"]=$id;
+                    $doc["name"]=basename($path);
+                    $listId[] = $doc;
+                }
+                return $listId;
+            }
+            return null;
         }
         return null;
     }
@@ -640,21 +660,44 @@ class DbHandler {
         } else if($details["type"]=="calendar") {
             $this->log->addInfo("Get details for container calendar " . $containerId);
             $modules = array();
-            $stmt3 = $this->conn->prepare("SELECT c.id, c.title, c.date FROM calendar_module as c WHERE container_id= ? ");
+            $stmt3 = $this->conn->prepare("SELECT c.id, c.title, c.date, c.time FROM calendar_module as c WHERE container_id= ? ");
             $stmt3->bind_param("i", $containerId);
             if ($stmt3->execute()) {
-                $stmt3->bind_result($id, $title, $date);
+                $stmt3->bind_result($id, $title, $date, $time);
                 while ($stmt3->fetch()) {
                     $module = array();
                     $module["id"] = $id;
                     $module["title"] = $title;
                     $module["date"] = $date;
+                    $module["time"] = $time;
                     $modules[] = $module;
                 }
                 $stmt3->close();
                 $details["modules"] = $modules;
             } else return null;
-        }
+        }else if($details["type"]=="chat"){
+                     $this->log->addInfo("Get list of topics for container ".$containerId);
+                     $topics = array();
+                     $stmt4 = $this->conn->prepare("SELECT id, title,create_date,nb_replies,creator, description FROM forum_module WHERE container_id= ? ");
+                     $stmt4->bind_param("i", $containerId);
+                     if ($stmt4->execute()) {
+                         $this->log->addInfo("Query ok");
+                         $stmt4->bind_result($moduleId, $moduleName,$date,$nb_replies,$creator, $description);
+                         $this->log->addInfo($stmt4->num_rows);
+                         while ($stmt4->fetch()){
+                             $topic = array();
+                             $topic["id"]= $moduleId;
+                             $topic["title"] = $moduleName;
+                             $topic["creator"] = $creator;
+                             $topic["date"] = $date;
+                             $topic["replies"] = $nb_replies;
+                             $topic["description"] = $description;
+                             $topics[]=$topic;
+                         }
+                         $stmt4->close();
+                         $details["topics"] = $topics;
+                     } else return null;
+                 }
         //TODO for other type
         return $details;
     }
@@ -737,13 +780,13 @@ class DbHandler {
         if($stmt->execute()){
             $stmt->bind_result($id,$title,$description,$expire_date);
             while($stmt->fetch()){
-                $listId = array();
+                $docs = array();
                 $this->log->addInfo("The title is". $title);
-                $listId["id"]=$id;
-                $listId["title"]=$title;
-                $listId["description"]=$description;
-                $listId["expire_date"]=$expire_date;
-                $listsId[]=$listId;
+                $docs["id"]=$id;
+                $docs["title"]=$title;
+                $docs["description"]=$description;
+                $docs["expire_date"]=$expire_date;
+                $listsId[]=$docs;
             }
             $stmt->close();
             $details["polles"] = $listsId;
@@ -987,5 +1030,139 @@ class DbHandler {
         }
         return true;
     }
+
+    public function createTopic($title,$description,$container_id,$creatorId){
+        $this->log->addInfo("creating a topic");
+        $stmt1 = $this->conn->prepare("SELECT first_name, last_name FROM users WHERE id=?");
+        $creator ="";
+        $stmt1->bind_param('i',$creatorId);
+        if ($stmt1->execute()) {
+            $stmt1->bind_result($f , $l);
+            $stmt1->fetch();
+            $creator = $f ." ". $l;
+            $stmt1->close();
+        }
+
+        $stmt = $this->conn->prepare("INSERT INTO forum_module (title,description,container_id,nb_replies,creator, creator_id) VALUES (?,?,?,0,?,?)");
+        $stmt->bind_param('ssisi',$title,$description,$container_id,$creator, $creatorId);
+        if ($stmt->execute()) {
+                $topicId = $stmt->insert_id;
+                $this->log->addInfo("topic created");
+                $stmt->close();
+        }else {
+            return NULL;
+        }
+        return array("id"=>$topicId, "title"=>$title, "description"=>$description, "creator"=>$creator, "date"=>date("F j, Y, g:i a"), "creatorId"=>$creatorId, "replies"=>0);
+        }
+
+        public function deleteForumModule($topicId){
+            $stmt = $this->conn->prepare("DELETE FROM forum_module WHERE id =?");
+            $stmt->bind_param("i",$topicId);
+            if($stmt->execute()){
+                $this->log->addInfo("Deleted topic");
+                $stmt->close();
+                return TRUE;
+            }
+            $this->log->addInfo("Failed to delete");
+            return FALSE;
+        }
+
+        public function updateTopic($moduleId, $newTopicName){
+            $stmt = $this->conn->prepare("UPDATE forum_module SET title=? WHERE id=?");
+            $stmt->bind_param("si",$newTopicName,$moduleId);
+            if($stmt->execute()){
+                    $this->log->addInfo("update topic with id ". $moduleId);
+                    $stmt->close();
+                return TRUE;
+            }else {
+                return FALSE;
+            }
+        }
+
+        public function getTopicDetails($topicId){
+            $stmt1 = $this->conn->prepare("SELECT title, description ,container_id ,nb_replies,creator, creator_id, create_date FROM forum_module WHERE id=?");
+            $stmt1->bind_param('i',$topicId);
+            if ($stmt1->execute()) {
+                $this->log->addInfo("topic created");
+                $stmt1->bind_result($title,$description, $containerId, $replies, $creator, $creatorId, $date);
+                $stmt1->close();
+            }else {
+                return NULL;
+            }
+            $topic_details=array();
+            $topic_details["title"]=$title;
+            $topic_details["description"]=$description;
+            $topic_details["creator"]=$creator;
+            $topic_details["replies"]=$replies;
+            $topic_details["containerId"]=$containerId;
+            $topic_details["date"]=$date;
+            $comments=array();
+            $this->log->addInfo("Get comments for topic no ".$topicId);
+            $stmt = $this->conn->prepare("SELECT c.id, c.comment, c.creator, c.create_date FROM forum_comments as c WHERE topic_id=?");
+            $stmt->bind_param("i", $topicId);
+            if ($stmt->execute()) {
+                $stmt->bind_result($id,$comment_text,$creator,$date);
+                while ($stmt->fetch()){
+                    $comment=array();
+                    $comment["topicId"]=$id;
+                    $comment["comment"]=$comment_text;
+                    $comment["author"]=$creator;
+                    $comment["date"]=$date;
+                    $comments[]=$comment;
+                }
+                $stmt->close();
+                $topic_details["comments"]=$comments;
+
+            } else return null;
+
+
+            return $topic_details;
+        }
+
+
+        public function createComment($comment_text,$creator,$topic_id){
+            $this->log->addInfo("creating a comment");
+            $date=date('Y-m-d H:i:s');
+            $this->log->addInfo($date);
+            $stmt = $this->conn->prepare("INSERT INTO forum_comments (comment,topic_id,creator,create_date) VALUES (?,?,?,?)");
+            $stmt->bind_param('siss',$comment_text,$topic_id,$creator,$date);
+            if ($stmt->execute()) {
+
+                    $commentId = $stmt->insert_id;
+                    $this->log->addInfo("comment created");
+                    $stmt->close();
+                    return $commentId;
+                }else {
+                    return NULL;
+                }
+
+        }
+
+        public function deleteTopicComment($commentId){
+            $stmt = $this->conn->prepare("DELETE FROM forum_comments WHERE id =?");
+            $stmt->bind_param("i",$commentId);
+            if($stmt->execute()){
+                $this->log->addInfo("Deleted comment");
+                $stmt->close();
+                return TRUE;
+            }
+            $this->log->addInfo("Failed to delete");
+            return FALSE;
+
+        }
+
+        public function updateComment($commentId, $newComment){
+            $stmt = $this->conn->prepare("UPDATE forum_comments SET comment=? WHERE id=?");
+            $stmt->bind_param("si",$newComment,$commentId);
+            if($stmt->execute()){
+                    $this->log->addInfo("update comment with id ". $commentId);
+                    $stmt->close();
+
+            }else {
+                return FALSE;
+            }
+            return TRUE;
+
+        }
 }
 ?>

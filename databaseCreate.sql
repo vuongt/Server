@@ -47,6 +47,30 @@ CREATE TABLE module_containers (
     PRIMARY KEY (id)
 )ENGINE=INNODB;
 
+
+CREATE TABLE forum_module (
+    id MEDIUMINT NOT NULL AUTO_INCREMENT,
+    title VARCHAR(50) NOT NULL,
+    container_id MEDIUMINT DEFAULT 0,
+    create_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    nb_replies MEDIUMINT DEFAULT 0,
+    creator VARCHAR(255) NOT NULL,
+    description VARCHAR(1000),
+    creator_id INT,
+    PRIMARY KEY (id)
+)ENGINE=INNODB;
+
+
+CREATE TABLE forum_comments(
+    id MEDIUMINT NOT NULL AUTO_INCREMENT,
+    comment VARCHAR(2000),
+    topic_id MEDIUMINT NOT NULL,
+    creator VARCHAR(255) NOT NULL,
+    create_date DATETIME,
+    PRIMARY KEY (id)
+)ENGINE=INNODB;
+
+
 CREATE TABLE vote_module (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     title VARCHAR(50) NOT NULL,
