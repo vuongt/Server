@@ -71,28 +71,6 @@ $app->get('/hello/{name}', function (Request $request, Response $response) {
     return $response;
 });
 
-$app->get('/user', function(Request $req, Response $res){
-    $this->log->addInfo("/user headers ". implode(",", $req->getHeader('Authorization')));
-    $jwt = extractTokenFromHeader($req);
-    if ($jwt){
-        $userId = getUserIdFromToken($jwt);
-
-        if (!$userId){
-            $res = $res->withStatus(400, 'Bad request');
-        }
-        $db = new DbHandler($this->dbLog);
-        $user = $db->getUserById($userId);
-        $res = $res->withJson($user);
-        $this->log->addInfo("User's info sent");
-        return $res;
-    } else {
-        $res = $res->withStatus(400, 'Request without authorization header');
-        $this->log->addInfo("Request user's info without authorization header");
-        return $res;
-    }
-
-});
-
 $app->get('/user/tel/{tel}', function(Request $req, Response $res){
     $tel = $req->getAttribute('tel');
     $db = new DbHandler($this->dbLog);
@@ -101,6 +79,8 @@ $app->get('/user/tel/{tel}', function(Request $req, Response $res){
 });
 
 //==========Authentication=============
+//==============================================
+
 $app->post('/signin', function(Request $req, Response $res){
     $this->log->addInfo("User sign in ");
     $data = $req->getParsedBody();
@@ -152,7 +132,30 @@ $app->post('/signup', function(Request $req, Response $res){
     return $res;
 });
 
+$app->get('/user', function(Request $req, Response $res){
+    $this->log->addInfo("/user headers ". implode(",", $req->getHeader('Authorization')));
+    $jwt = extractTokenFromHeader($req);
+    if ($jwt){
+        $userId = getUserIdFromToken($jwt);
+
+        if (!$userId){
+            $res = $res->withStatus(400, 'Bad request');
+        }
+        $db = new DbHandler($this->dbLog);
+        $user = $db->getUserById($userId);
+        $res = $res->withJson($user);
+        $this->log->addInfo("User's info sent");
+        return $res;
+    } else {
+        $res = $res->withStatus(400, 'Request without authorization header');
+        $this->log->addInfo("Request user's info without authorization header");
+        return $res;
+    }
+
+});
+
 //===========get media by Id=======
+//==============================================
 
 $app->get('/getMedia', function (Request $req, Response $res){
     $id = $req->getQueryParam("id");
@@ -167,6 +170,7 @@ $app->get('/getMedia', function (Request $req, Response $res){
 });
 
 //============Global app action=========
+//==============================================
 
 $app->post('/createApp', function(Request $req, Response $res){
     $this->log->addInfo("/createApp is called");
@@ -332,6 +336,7 @@ $app->post('/app/upload', function(Request $req, Response $res){
 });
 
 //==========Container global action====================
+//==============================================
 
 $app->get('/container/loadDetails', function(Request $req, Response $res){
     $containerId = $req->getQueryParam("containerId",0);
@@ -379,6 +384,7 @@ $app->get('/container/delete', function (Request $req, Response $res){
 });
 
 //==========Module media sharing=========
+//==============================================
 
 $app->get('/container/addModule/media', function(Request $req, Response $res){
     $containerId = $req->getQueryParam("containerId",0);
@@ -456,16 +462,7 @@ $app->get('/module/media/deleteFile', function (Request $req, Response $res){
 });
 
 //==========Module VOTE=========
-
-$app->get('/module/vote/getVote', function(Request $req, Response $res){
-    $containerId = $req->getQueryParam("containerId",0);
-    $db = new DbHandler($this->dbLog);
-    $listId = $db->getListIdVoteModule($containerId);
-
-    return $res->withJson($listId);
-
-
-});
+//==============================================
 
 $app->post('/module/vote/addVote', function(Request $req, Response $res){
     $this->log->addInfo("/addVote is called");
@@ -546,7 +543,7 @@ $app->post('/module/vote/update', function(Request $req, Response $res){
     return $res->withHeader(500);
 
 });
-
+//TODO
 $app->get('/module/vote/expiredornotexpired', function(Request $req, Response $res){
     $db = new DbHandler($this->dbLog);
     if($db->setToExpirePoll()){
@@ -564,6 +561,8 @@ $app->get('/module/vote/usersVoters',function(Request $req, Response $res){
 });
 
 //===============MODULE BUDGET============
+//==============================================
+
 $app->post('/module/budget/addCost', function(Request $req, Response $res){
     $containerId = $_POST["containerId"];
     $description = $_POST["description"];
@@ -598,6 +597,7 @@ $app->get('/module/budget/deleteExpense', function (Request $req, Response $res)
 });
 
 //=================MODULE MAP==============
+//==============================================
 
 $app->post('/module/map/add', function(Request $req, Response $res){
     $containerId = $_POST["containerId"];
@@ -620,6 +620,8 @@ $app->get('/module/map/delete', function(Request $req, Response $res){
 });
 
 //================MODULE CALENDAR===========
+//==============================================
+
 $app->post('/module/calendar/add', function(Request $req, Response $res){
     $containerId = $_POST["containerId"];
     $title = $_POST["title"];
@@ -640,6 +642,7 @@ $app->get('/module/calendar/delete', function(Request $req, Response $res){
 });
 
 //===============MODULE FORUM============
+//==============================================
 
 $app->post('/module/forum/addForum', function(Request $req, Response $res){
     $this->log->addInfo("/addForum is called");

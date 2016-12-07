@@ -12,21 +12,21 @@ class DbConnect {
     }
 
     /**
-     * établissement de la connexion
+     * Establish the connection
      * @return mysqli
      */
     function connect() {
         include_once dirname(__FILE__) . '/config.php';
 
-        // Connexion à la base de données mysql
+        // Connect to mysql database
         $this->conn = new mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
-        // Vérifiez les erreurs de connexion àla base de données
+        // Verify if there are any errors while connecting to the database
         if (mysqli_connect_errno()) {
             echo "Impossible de se connecter à MySQL: " . mysqli_connect_error();
         }
 
-        //retourner la ressource de connexion
+        //return the connection
         return $this->conn;
     }
 

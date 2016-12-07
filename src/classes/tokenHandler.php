@@ -8,6 +8,11 @@ include dirname(__FILE__) . '/config.php';
  * Time: 09:48
  */
 
+/**
+ * @param $req
+ * @return null
+ * Extract token from header
+ */
 function extractTokenFromHeader($req){
     $authHeader = $req->getHeader('Authorization');
     if ($authHeader){
@@ -18,6 +23,12 @@ function extractTokenFromHeader($req){
     return NULL;
 }
 
+
+/**
+ * @param $userId
+ * @return string
+ * create a new token with user id as payload
+ */
 function createToken($userId){
     //$tokenId    = base64_encode(mcrypt_create_iv(32));
     $issuedAt   = time();

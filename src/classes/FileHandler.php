@@ -14,6 +14,13 @@ class FileHandler{
         $this->log = $logger;
     }
 
+    /**
+     * @param $appId
+     * @param $fieldName : field name of the file in POST request
+     * @return null|string the path to the file
+     * save an image to app's folder (back ground or image)
+     * app's folder is named by it id and placed inside res/app/
+     */
     public function saveImageToApp($appId,$fieldName){
         $this->log->addInfo("Saving image " . $fieldName ." of ".$appId);
         $this->log->addInfo("check if folder exists");
@@ -65,6 +72,12 @@ class FileHandler{
         }
     }
 
+    /**
+     * @param $moduleId
+     * @param $fieldName : field name of the file in POST request
+     * @return null|string
+     * Save an image to media module of type image
+     */
     public function saveImageToModule($moduleId,$fieldName){
         $type = "image";
         $this->log->addInfo("Saving ".$type." to ".$moduleId);
@@ -118,6 +131,13 @@ class FileHandler{
         }
     }
 
+    /**
+     * @param $moduleId
+     * @param $fieldName : field name of the file in POST request
+     * @param $type
+     * @return null|string
+     * save a documents or files in module of type document
+     */
     public function saveContentToModule($moduleId,$fieldName, $type){
         $this->log->addInfo("Saving ".$type." to ".$moduleId);
         $this->log->addInfo("check if folder exists");
@@ -172,6 +192,10 @@ class FileHandler{
         }
     }
 
+    /**
+     * @param $dir
+     *  delete a directory with all files in it
+     */
     public function deleteDir($dir){
         if (is_dir($dir)){
             $it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
@@ -188,6 +212,11 @@ class FileHandler{
         }
     }
 
+    /**
+     * @param $path
+     * @return bool true if success
+     * delete a file
+     */
     public function deleteFile($path){
         if (file_exists($path)){
             return unlink($path);
