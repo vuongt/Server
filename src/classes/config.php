@@ -13,7 +13,11 @@ define('USER_ALREADY_EXISTED', 2);
 define('USER_NON_EXIST', 3);
 define('WRONG_PASSWORD',4);
 define('AUTHENTICATE_SUCCESS',5);
- define('SECRET_KEY_JWT', 'dty-orange');
 
+define('SECRET_KEY_JWT', 'dty-orange');
 define('TOKEN_EXPIRED',7*60*60*24); //7 days
+
+define('DEFAULT_ICON_PATH', '../../res/app/default/icon.png');
+define('DEFAULT_BACKGROUND_PATH', '../../res/app/default/background.png');
+define('RES_MODULE_PATH', '../../res/module/');
 ?>

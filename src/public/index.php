@@ -9,7 +9,7 @@ spl_autoload_register(function($classname){
 	require ("../classes/".$classname.".php");
 });
 require_once ("../classes/tokenHandler.php");
-require_once ("../classes/Constants.php");
+require_once ("../classes/config.php");
 
 date_default_timezone_set('UTC');
 
@@ -36,7 +36,7 @@ $container['log'] = function($c) {
     $logger->pushHandler(new \Monolog\Handler\StreamHandler("../logs/app.log"));
     return $logger;
 };
-
+// log for the FileHandler file
 $container['fileLog'] = function($c) {
     //set up the dependency when it is called for the first time
     $logger = new \Monolog\Logger('FileHandler');
@@ -44,15 +44,13 @@ $container['fileLog'] = function($c) {
     return $logger;
 };
 
+//Log for DbHandler
 $container['dbLog'] = function($c) {
     //set up the dependency when it is called for the first time
     $logger = new \Monolog\Logger('DbHandler');
     $logger->pushHandler(new \Monolog\Handler\StreamHandler("../logs/app.log"));//log all error to a file called logs/app.log
     return $logger;
 };
-
-
-//===========Helper functions=================
 
 
 //==========================ROUTES=========================
@@ -117,12 +115,6 @@ $app->post('/signin', function(Request $req, Response $res){
         $this->log->addInfo("Create and add token to user with id ".$id);
         $token = createToken($id);
         $auth['token']= $token;
-        /*if ($db->updateToken($id,$token)){
-            $res = $res->withJson($auth);
-            $this->log->addInfo("Token sent. Finish sign in");
-        } else {
-            $res = $res->withHeader(500, 'Fail to write token to database');
-        }*/
         return $res = $res->withJson($auth);
     } else if ($auth ==WRONG_PASSWORD){
         return $res->withHeader(401, 'Wrong password');
@@ -151,12 +143,6 @@ $app->post('/signup', function(Request $req, Response $res){
         $this->log->addInfo("Create and add token to user with id ".$id);
         $token = createToken($id);
         $auth['token']= $token;
-        /*if ($db->updateToken($id,$token)){
-            $res = $res->withJson($auth);
-            $this->log->addInfo("Token sent. finish sign up");
-        } else {
-            $res = $res->withHeader(500, 'Fail to write token to database');
-        }*/
         $res = $res->withJson($auth);
     } else if ($reg ==USER_ALREADY_EXISTED){
         $res = $res->withHeader(400, 'User already existed');
@@ -166,11 +152,7 @@ $app->post('/signup', function(Request $req, Response $res){
     return $res;
 });
 
-$app->get('/logout', function(Request $req, Response $res){});
-
-//===========Upload and get media=======
-
-
+//===========get media by Id=======
 
 $app->get('/getMedia', function (Request $req, Response $res){
     $id = $req->getQueryParam("id");
@@ -179,11 +161,8 @@ $app->get('/getMedia', function (Request $req, Response $res){
     $this->log->addInfo("/getMedia sending media from path ".$path);
     $image=file_get_contents($path);
     $finfo = new finfo(FILEINFO_MIME_TYPE);
-    //$body = $res->getBody();
-    //$body->write($image);
     $res = $res->write($image);
     $res = $res->withHeader('Content-Type', $finfo->buffer($image));
-    //echo $image;
     return $res;
 });
 
@@ -266,7 +245,6 @@ $app->post('/createApp/default', function(Request $req, Response $res){
     return $res->withJson(array("appId"=>$appId));
 });
 
-
 $app->get('/deleteApp', function(Request $req, Response $res){
     $appId = $req->getQueryParam("appId");
     $db = new DbHandler($this->dbLog);
@@ -296,20 +274,6 @@ $app->post('/updateApp', function(Request $req, Response $res){
     return $res->withHeader(500);
 
 });
-
-//=============Inside app action========
-/*$app->get('/app/addUser',function(Request $req, Response $res){
-    $userId = $req->getQueryParam('userId');
-    $appId = $req->getQueryParam('appId');
-    $this->log->addInfo("add user ".$userId." to app ".$appId);
-    $db = new DbHandler($this->dbLog);
-    if ($db->addUserToApp($appId, $userId)){
-        $res->withStatus(200, "action success");
-    } else {
-        $res->withStatus(500, "action fail");
-    }
-    return $res;
-});*/
 
 $app->get('/app/addUser',function(Request $req, Response $res) {
     $tel = $req->getQueryParam('tel');
@@ -356,18 +320,6 @@ $app->get('/app/createContainer', function(Request $req, Response $res){
 
 });
 
-$app->get('/app/removeContainer', function(Request $req, Response $res){
-
-});
-
-$app->get('/app/addModule', function(Request $req, Response $res){
-
-});
-
-$app->get('/app/removeModule', function(Request $req, Response $res){
-
-});
-
 $app->post('/app/upload', function(Request $req, Response $res){
     $this->log->addInfo("Uploading file");
     $appId = $_POST["appId"];
@@ -379,19 +331,7 @@ $app->post('/app/upload', function(Request $req, Response $res){
     return $res->withJson(["path"=>$filePath]);
 });
 
-
-//==========Container====================
-$app->get('/container/addModule/media', function(Request $req, Response $res){
-    $containerId = $req->getQueryParam("containerId",0);
-    $name = $req->getQueryParam("name","");
-    $type=$req->getQueryParam("type","");
-    $db = new DbHandler($this->dbLog);
-    $moduleId = $db->addModuleMedia($containerId, $name, $type);
-    if($moduleId){
-        return $res->withJson(["id"=>$moduleId]);
-    }
-    return $res->withHeader(401);
-});
+//==========Container global action====================
 
 $app->get('/container/loadDetails', function(Request $req, Response $res){
     $containerId = $req->getQueryParam("containerId",0);
@@ -439,6 +379,18 @@ $app->get('/container/delete', function (Request $req, Response $res){
 });
 
 //==========Module media sharing=========
+
+$app->get('/container/addModule/media', function(Request $req, Response $res){
+    $containerId = $req->getQueryParam("containerId",0);
+    $name = $req->getQueryParam("name","");
+    $type=$req->getQueryParam("type","");
+    $db = new DbHandler($this->dbLog);
+    $moduleId = $db->addModuleMedia($containerId, $name, $type);
+    if($moduleId){
+        return $res->withJson(["id"=>$moduleId]);
+    }
+    return $res->withHeader(401);
+});
 
 $app->post('/module/media/upload', function(Request $req, Response $res){
     $this->log->addInfo("Uploading file");
