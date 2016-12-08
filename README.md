@@ -150,6 +150,9 @@ This section explains how to deloy the server on a Linux machine using Apache.
 * Finally, make sur that the directory res and logs have all the read and write rights so that the php application can retrieve and save files, as well as the logger can write logs to **app.log**. For example you can set:
 
 		chmod 777 app.log
+		
+Please verify that in **/var/Server/res/app/default** you have 2 files named **icon.png** and **background.png** Theses files are used to be the default icon and background of an application. If they're not there, add 2 new files of your choice with the names mentioned above in directory **/var/Server/res/app/default** !
+
 The server is now up and running !
 
 	
