@@ -912,31 +912,14 @@ class DbHandler {
 
    // =========Module VOTE===========================
      //==============================================
-
-     public function getListIdVoteModule($container_id){
-    $details = array();
-    $this->log->addInfo("WOW Get list of vote id of container ". $container_id);
-    $stmt = $this->conn->prepare("SELECT v.id,v.title,v.description FROM vote_module as v WHERE container_id =?");
-    $stmt->bind_param("i",$container_id);
-    $listsId = array();
-    if($stmt->execute()){
-        $stmt->bind_result($id,$title,$description,$expire_date);
-        while($stmt->fetch()){
-            $docs = array();
-            $this->log->addInfo("The title is". $title);
-            $docs["id"]=$id;
-            $docs["title"]=$title;
-            $docs["description"]=$description;
-            $docs["expire_date"]=$expire_date;
-            $listsId[]=$docs;
-        }
-        $stmt->close();
-        $details["polles"] = $listsId;
-        return $details;
-    }
-    return null;
-    }
-
+     /**
+      * @param $title
+      * @param $description
+      * @param $container_id
+      * @param $expire_date
+      * @return int|null
+      * Create anew vote module
+      */
     public function createVote($title,$description,$container_id,$expire_date){
         $this->log->addInfo("creating a vote");
         $stmt = $this->conn->prepare("INSERT INTO vote_module (title,description,container_id,expire_date) VALUES (?,?,?,?)");
@@ -951,6 +934,13 @@ class DbHandler {
         return $voteId;
     }
 
+     /**
+      * @param $id
+      * @param $title
+      * @param $description
+      * @return bool
+      * Update the new name and description for a vote
+      */
     public function updateVote($id,$title,$description){
         $stmt = $this->conn->prepare("UPDATE vote_module SET title=?,description=? WHERE id=?");
         $stmt->bind_param("ssi",$title,$description,$id);
@@ -966,6 +956,11 @@ class DbHandler {
         return $id;
     }
 
+     /**
+      * @param $id
+      * @return bool : true if success
+      * Delete a vote module
+      */
     public function deleteVoteModule($id){
         $stmt = $this->conn->prepare("DELETE FROM vote_module WHERE id =?");
         $stmt->bind_param("i",$id);
@@ -984,6 +979,11 @@ class DbHandler {
         return FALSE;
     }
 
+     /**
+      * @param $moduleId
+      * @return array|null
+      * Get list of options of a module
+      */
     public function getModuleVoteOptions($moduleId){
         $this->log->addInfo("Get list of options of module vote". $moduleId);
         $stmt = $this->conn->prepare("SELECT id, name, num_votes FROM vote_options WHERE vote_id = ?");
@@ -1004,6 +1004,12 @@ class DbHandler {
         return null;
     }
 
+     /**
+      * @param $moduleId
+      * @param $option
+      * @return int the id of the option
+      * Add a nex option to a module
+      */
     public function addOptionToModuleVote($moduleId, $option){
         $this->log->addInfo("Add option to module vote". $moduleId);
         $stmt = $this->conn->prepare("INSERT INTO vote_options(name, vote_id, num_votes) VALUES (?,?,0)");
@@ -1014,6 +1020,11 @@ class DbHandler {
         }
     }
 
+     /**
+      * @param $optionId
+      * @return bool : true if success
+      * Increment the number of vote for an option
+      */
     public function incrementVoteOption($optionId){
         $this->log->addInfo("Increment value of option ". $optionId);
         $stmt = $this->conn->prepare("UPDATE vote_options SET num_votes = num_votes +1 WHERE id = ?");
@@ -1052,6 +1063,11 @@ class DbHandler {
         return false;
     }
 
+     /**
+      * @param $containerId
+      * @return bool
+      * Delete a poll container
+      */
      public function deleteContainerPoll($containerId){
          $details = $this->getContainerDetails($containerId);
          $modules = $details["modules"];
@@ -1067,6 +1083,12 @@ class DbHandler {
          return true;
      }
 
+     /**
+      * @param $moduleId
+      * @param $userId
+      * @return bool
+      * Add an user to the list of people who have voted in that module
+      */
     public function addUserWhoVoted($moduleId,$userId){
         $this->log->addInfo("adding users who voted");
         $stmt = $this->conn->prepare("INSERT INTO vote_options_users(vote_id,user_id) VALUES(?,?)");
@@ -1078,6 +1100,11 @@ class DbHandler {
 
     }
 
+     /**
+      * @param $vote_id
+      * @return array|null
+      * Get list of users who voted
+      */
     public function getUsersWhoVoted($vote_id){
         $who_voted=array();
         $stmt3 = $this->conn->prepare("SELECT user_id FROM vote_options_users WHERE vote_id= ?");
@@ -1097,6 +1124,14 @@ class DbHandler {
     //=============Budget Module====================
      //==============================================
 
+     /**
+      * @param $containerId
+      * @param $description
+      * @param $value
+      * @param $userId
+      * @return array|int
+      * add a new expense
+      */
      public function addCostModuleBudget($containerId, $description, $value, $userId){
         $this->log->addInfo("Add cost to container budget". $containerId);
         $stmt = $this->conn->prepare("SELECT first_name, last_name FROM users WHERE id=?");
@@ -1118,6 +1153,13 @@ class DbHandler {
         return 0;
     }
 
+     /**
+      * @param $moduleId
+      * @param $newDescription
+      * @param $newValue
+      * @return bool
+      * set a new description and value for an expense
+      */
     public function updateModuleBudget($moduleId, $newDescription, $newValue){
         $stmt = $this->conn->prepare("UPDATE budget_module as b SET b.description = $newDescription AND b.value = $newValue WHERE id = ?");
         $stmt->bind_param("ssi", $newDescription,$newValue, $moduleId);
@@ -1129,6 +1171,11 @@ class DbHandler {
         }
     }
 
+     /**
+      * @param $expenseId
+      * @return bool
+      * delete an expense
+      */
     public function deleteExpense($expenseId){
         $stmt = $this->conn->prepare("DELETE FROM budget_module WHERE id = ?");
         $stmt->bind_param("i", $expenseId);
@@ -1144,6 +1191,15 @@ class DbHandler {
      //=============Map Module=======================
      //==============================================
 
+     /**
+      * @param $containerId
+      * @param $description
+      * @param $address
+      * @param $lat
+      * @param $lng
+      * @return int : the  id of the address
+      * Add a new address
+      */
     public function addMapModule($containerId, $description, $address, $lat,$lng){
     $stmt = $this->conn->prepare("INSERT INTO map_module(container_id, description, address, lat, lng) VALUES (?,?,?,?,?)");
     $stmt->bind_param("issdd", $containerId, $description, $address, $lat,$lng);
@@ -1157,6 +1213,11 @@ class DbHandler {
     return $id;
 }
 
+     /**
+      * @param $moduleId
+      * @return bool
+      * Delete an address
+      */
     public function deleteMapModule($moduleId){
         $stmt = $this->conn->prepare("DELETE FROM map_module WHERE id = ?");
         $stmt->bind_param("i", $moduleId);
@@ -1171,7 +1232,14 @@ class DbHandler {
 
      //=============Calendar Module==================
      //==============================================
-
+     /**
+      * @param $containerId
+      * @param $title
+      * @param $date
+      * @param $time
+      * @return int : the id of the event
+      * Add a new event
+      */
     public function addCalendarModule($containerId, $title, $date, $time){
         $stmt = $this->conn->prepare("INSERT INTO calendar_module (container_id, title, date, time) VALUES (?,?,?,?)");
         $stmt->bind_param("isss", $containerId, $title, $date, $time);
@@ -1185,6 +1253,11 @@ class DbHandler {
         return $id;
     }
 
+     /**
+      * @param $moduleId
+      * @return bool
+      * Delete an event
+      */
     public function deleteCalendarModule($moduleId){
         $stmt = $this->conn->prepare("DELETE FROM calendar_module WHERE id = ?");
         $stmt->bind_param("i", $moduleId);
@@ -1200,6 +1273,14 @@ class DbHandler {
      //=============Forum Module==================
      //==============================================
 
+     /**
+      * @param $title
+      * @param $description
+      * @param $container_id
+      * @param $creatorId
+      * @return array|null : fill description of that topic, with its id
+      * Create a new topic
+      */
     public function createTopic($title,$description,$container_id,$creatorId){
         $this->log->addInfo("creating a topic");
         $stmt1 = $this->conn->prepare("SELECT first_name, last_name FROM users WHERE id=?");
@@ -1224,6 +1305,11 @@ class DbHandler {
         return array("id"=>$topicId, "title"=>$title, "description"=>$description, "creator"=>$creator, "date"=>date("F j, Y, g:i a"), "creatorId"=>$creatorId, "replies"=>0);
         }
 
+     /**
+      * @param $topicId
+      * @return bool
+      * DElete a topic
+      */
     public function deleteForumModule($topicId){
         $stmt = $this->conn->prepare("DELETE FROM forum_module WHERE id =?");
         $stmt->bind_param("i",$topicId);
@@ -1236,6 +1322,12 @@ class DbHandler {
         return FALSE;
     }
 
+     /**
+      * @param $moduleId
+      * @param $newTopicName
+      * @return bool
+      * Update a new name for a topic
+      */
     public function updateTopic($moduleId, $newTopicName){
         $stmt = $this->conn->prepare("UPDATE forum_module SET title=? WHERE id=?");
         $stmt->bind_param("si",$newTopicName,$moduleId);
@@ -1248,6 +1340,11 @@ class DbHandler {
         }
     }
 
+     /**
+      * @param $topicId
+      * @return array|null
+      * Get details of a topic
+      */
     public function getTopicDetails($topicId){
         $stmt1 = $this->conn->prepare("SELECT title, description ,container_id ,nb_replies,creator, creator_id, create_date FROM forum_module WHERE id=?");
         $stmt1->bind_param('i',$topicId);
@@ -1288,6 +1385,13 @@ class DbHandler {
         return $topic_details;
     }
 
+     /**
+      * @param $comment_text
+      * @param $creator
+      * @param $topic_id
+      * @return int|null : the id of the comment
+      * Create a new comment
+      */
     public function createComment($comment_text,$creator,$topic_id){
         $this->log->addInfo("creating a comment");
         $date=date('Y-m-d H:i:s');
@@ -1306,6 +1410,11 @@ class DbHandler {
 
     }
 
+     /**
+      * @param $commentId
+      * @return bool : true if success
+      * Delete a comment
+      */
     public function deleteTopicComment($commentId){
         $stmt = $this->conn->prepare("DELETE FROM forum_comments WHERE id =?");
         $stmt->bind_param("i",$commentId);
@@ -1319,6 +1428,12 @@ class DbHandler {
 
     }
 
+     /**
+      * @param $commentId
+      * @param $newComment
+      * @return bool : true if success
+      * Update a comment
+      */
     public function updateComment($commentId, $newComment){
         $stmt = $this->conn->prepare("UPDATE forum_comments SET comment=? WHERE id=?");
         $stmt->bind_param("si",$newComment,$commentId);

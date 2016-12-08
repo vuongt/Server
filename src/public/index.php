@@ -56,6 +56,7 @@ $container['dbLog'] = function($c) {
 //==========================ROUTES=========================
 //=========================================================
 
+//Route for testing
 $app->get('/', function (Request $request, Response $response) {
     echo "hello";
     return $response->withHeader(200, "hello");
@@ -156,7 +157,7 @@ $app->get('/user', function(Request $req, Response $res){
 
 //===========get media by Id=======
 //==============================================
-
+// get a file by its id
 $app->get('/getMedia', function (Request $req, Response $res){
     $id = $req->getQueryParam("id");
     $db = new DbHandler($this->dbLog);
@@ -172,6 +173,10 @@ $app->get('/getMedia', function (Request $req, Response $res){
 //============Global app action=========
 //==============================================
 
+/* create a new application
+* if icon = default and background = default, then the path of the default icon and default background will be add
+* if icon = custom and background = custom, then we have to pase the files from iconFile and backgroundFile
+*/
 $app->post('/createApp', function(Request $req, Response $res){
     $this->log->addInfo("/createApp is called");
     $db = new DbHandler($this->dbLog);
@@ -216,6 +221,9 @@ $app->post('/createApp', function(Request $req, Response $res){
     return $res->withJson(array("appId"=>$appId));
 });
 
+/**
+ * create a new application by default
+ */
 $app->post('/createApp/default', function(Request $req, Response $res){
     $this->log->addInfo("/createApp is called");
     $db = new DbHandler($this->dbLog);
@@ -249,6 +257,9 @@ $app->post('/createApp/default', function(Request $req, Response $res){
     return $res->withJson(array("appId"=>$appId));
 });
 
+/**
+ * delete an application
+ */
 $app->get('/deleteApp', function(Request $req, Response $res){
     $appId = $req->getQueryParam("appId");
     $db = new DbHandler($this->dbLog);
@@ -260,6 +271,9 @@ $app->get('/deleteApp', function(Request $req, Response $res){
     }
 });
 
+/**
+ * load all details about an application ( list users, list admins, list containers)
+ */
 $app->get('/loadApp', function(Request $req, Response $res){
     $appId = $req->getQueryParam("appId");
     $this->log->addInfo("loading App ".$appId);
@@ -268,6 +282,9 @@ $app->get('/loadApp', function(Request $req, Response $res){
     return $res->withJson($app);
 });
 
+/**
+ * update the name of an application
+ */
 $app->post('/updateApp', function(Request $req, Response $res){
     $appId = $_POST["appId"];
     $newName = $_POST["newName"];
@@ -279,6 +296,9 @@ $app->post('/updateApp', function(Request $req, Response $res){
 
 });
 
+/**
+ * add a new user to application
+ */
 $app->get('/app/addUser',function(Request $req, Response $res) {
     $tel = $req->getQueryParam('tel');
     $appId = $req->getQueryParam('appId');
@@ -297,6 +317,9 @@ $app->get('/app/addUser',function(Request $req, Response $res) {
     return $res;
 });
 
+/**
+ * remove an user from application
+ */
 $app->get('/app/removeUser',function(Request $req, Response $res){
     $userId = $req->getQueryParam('userId');
     $appId = $req->getQueryParam('appId');
@@ -311,6 +334,9 @@ $app->get('/app/removeUser',function(Request $req, Response $res){
 
 });
 
+/**
+ * create a new container
+ */
 $app->get('/app/createContainer', function(Request $req, Response $res){
     $appId = $req->getQueryParam("appId",0);
     $name = $req->getQueryParam("name","");
@@ -324,6 +350,9 @@ $app->get('/app/createContainer', function(Request $req, Response $res){
 
 });
 
+/**
+ * upload a file to application (icon or background)
+ */
 $app->post('/app/upload', function(Request $req, Response $res){
     $this->log->addInfo("Uploading file");
     $appId = $_POST["appId"];
@@ -337,7 +366,9 @@ $app->post('/app/upload', function(Request $req, Response $res){
 
 //==========Container global action====================
 //==============================================
-
+/**
+ * load container details (depends on type)
+ */
 $app->get('/container/loadDetails', function(Request $req, Response $res){
     $containerId = $req->getQueryParam("containerId",0);
     $this->log->addInfo("load Details for container ".$containerId);
@@ -350,6 +381,9 @@ $app->get('/container/loadDetails', function(Request $req, Response $res){
     }
 });
 
+/**
+ * update a new name for a container
+ */
 $app->post('/container/update', function(Request $req, response $res){
     $containerId = $_POST["containerId"];
     $newName = $_POST["newName"];
@@ -363,6 +397,9 @@ $app->post('/container/update', function(Request $req, response $res){
     }
 });
 
+/**
+ * delete a container
+ */
 $app->get('/container/delete', function (Request $req, Response $res){
     $containerId = $req->getQueryParam("containerId", 0);
     $db = new DbHandler($this->dbLog);
@@ -386,6 +423,9 @@ $app->get('/container/delete', function (Request $req, Response $res){
 //==========Module media sharing=========
 //==============================================
 
+/**
+ * Create a new media module
+ */
 $app->get('/container/addModule/media', function(Request $req, Response $res){
     $containerId = $req->getQueryParam("containerId",0);
     $name = $req->getQueryParam("name","");
@@ -398,6 +438,9 @@ $app->get('/container/addModule/media', function(Request $req, Response $res){
     return $res->withHeader(401);
 });
 
+/**
+ * upload a file to media module
+ */
 $app->post('/module/media/upload', function(Request $req, Response $res){
     $this->log->addInfo("Uploading file");
     $moduleId = $_POST["moduleId"];
@@ -414,6 +457,9 @@ $app->post('/module/media/upload', function(Request $req, Response $res){
     return $res->withStatus(500);
 });
 
+/**
+ * load list of files' id of a module
+ */
 $app->get('/module/media/load', function(Request $req, Response $res){
     $id = $req->getQueryParam("id",0);
     $type=$req->getQueryParam("type","");
@@ -422,6 +468,9 @@ $app->get('/module/media/load', function(Request $req, Response $res){
     return $res->withJson($listId);
 });
 
+/**
+ * update a new name for media module
+ */
 $app->post('/module/media/update', function(Request $req, Response $res){
     $moduleId = $_POST["moduleId"];
     $newName = $_POST["newName"];
@@ -433,6 +482,9 @@ $app->post('/module/media/update', function(Request $req, Response $res){
 
 });
 
+/**
+ * delete a media module with all files in it
+ */
 $app->get('/module/media/deleteModule', function (Request $req, Response $res){
     $moduleId = $req->getQueryParam("moduleId", 0);
     $this->log->addInfo("Delete module number ".$moduleId);
@@ -447,6 +499,9 @@ $app->get('/module/media/deleteModule', function (Request $req, Response $res){
     return $res->withHeader(500);
 });
 
+/**
+ * delete a file in a particular module
+ */
 $app->get('/module/media/deleteFile', function (Request $req, Response $res){
     $id = $req->getQueryParam("id", 0);
     $this->log->addInfo("Delete file with id ". $id);
@@ -463,7 +518,9 @@ $app->get('/module/media/deleteFile', function (Request $req, Response $res){
 
 //==========Module VOTE=========
 //==============================================
-
+/**
+ * add a now vote module
+ */
 $app->post('/module/vote/addVote', function(Request $req, Response $res){
     $this->log->addInfo("/addVote is called");
     $db = new DbHandler($this->dbLog);
@@ -492,6 +549,9 @@ $app->post('/module/vote/uploadVote', function(Request $req, Response $res){
     return $res->withStatus(404);
 });
 
+/**
+ * delete a vote
+ */
 $app->get('/module/vote/deleteVote', function(Request $req, Response $res){
     $this->log->addInfo("deleteVote is called");
     $voteId = $req->getQueryParam("voteId",0);
@@ -503,6 +563,9 @@ $app->get('/module/vote/deleteVote', function(Request $req, Response $res){
     return $res->withHeader(404, "Not FOUND");
 });
 
+/*
+ * Load a vote's details
+ */
 $app->get('/module/vote/load', function(Request $req, Response $res){
     $id = $req->getQueryParam("id",0);
     $db = new DbHandler($this->dbLog);
@@ -510,6 +573,9 @@ $app->get('/module/vote/load', function(Request $req, Response $res){
     return $res->withJson($options);
 });
 
+/**
+ * add option to a vote
+ */
 $app->post('/module/vote/addOption', function(Request $req, Response $res){
     $moduleId = $_POST["moduleId"];
     $option = $_POST["option"];
@@ -518,6 +584,9 @@ $app->post('/module/vote/addOption', function(Request $req, Response $res){
     return $res->withJson(array("id"=>$optionId));
 });
 
+/**
+ * increment an option
+ */
 $app->get('/module/vote/increment', function(Request $req, Response $res){
     $optionId = $req->getQueryParam("optionId");
     $moduleId = $req->getQueryParam("moduleId");
@@ -532,6 +601,9 @@ $app->get('/module/vote/increment', function(Request $req, Response $res){
 
 });
 
+/**
+ * update name and description of a vote
+ */
 $app->post('/module/vote/update', function(Request $req, Response $res){
     $moduleId = $_POST["moduleId"];
     $newName = $_POST["newName"];
@@ -553,6 +625,9 @@ $app->get('/module/vote/expiredornotexpired', function(Request $req, Response $r
 
 });
 
+/**
+ * get lists of voters
+ */
 $app->get('/module/vote/usersVoters',function(Request $req, Response $res){
     $id = $req->getQueryParam("id",0);
     $db = new DbHandler($this->dbLog);
@@ -563,6 +638,9 @@ $app->get('/module/vote/usersVoters',function(Request $req, Response $res){
 //===============MODULE BUDGET============
 //==============================================
 
+/**
+ * add a new expense
+ */
 $app->post('/module/budget/addCost', function(Request $req, Response $res){
     $containerId = $_POST["containerId"];
     $description = $_POST["description"];
@@ -574,6 +652,9 @@ $app->post('/module/budget/addCost', function(Request $req, Response $res){
     return $res->withJson($cost);
 });
 
+/**
+ * update name and value of an expense
+ */
 $app->post('/module/budget/update', function(Request $req, Response $res){
     $expenseId = $_POST["expenseId"];
     $newDescription = $_POST["newDescription"];
@@ -585,6 +666,9 @@ $app->post('/module/budget/update', function(Request $req, Response $res){
     return $res->withHeader(500);
 });
 
+/**
+ * delete an expense
+ */
 $app->get('/module/budget/deleteExpense', function (Request $req, Response $res){
     $expenseId = $req->getQueryParam("expenseId", 0);
     $this->log->addInfo("Delete expense number ".$expenseId);
@@ -599,6 +683,9 @@ $app->get('/module/budget/deleteExpense', function (Request $req, Response $res)
 //=================MODULE MAP==============
 //==============================================
 
+/**
+ * add a new address
+ */
 $app->post('/module/map/add', function(Request $req, Response $res){
     $containerId = $_POST["containerId"];
     $description = $_POST["description"];
@@ -610,6 +697,10 @@ $app->post('/module/map/add', function(Request $req, Response $res){
     return $res->withJson(array("id"=>$id, "containerId"=>$containerId, "description"=>$description, "address"=>$address, "lat"=>$lat, "lng"=>$lng));
 });
 
+/**
+ * delete an address
+ *
+ */
 $app->get('/module/map/delete', function(Request $req, Response $res){
     $moduleId = $req->getQueryParam("moduleId",0);
     $db = new DbHandler($this->dbLog);
@@ -622,6 +713,9 @@ $app->get('/module/map/delete', function(Request $req, Response $res){
 //================MODULE CALENDAR===========
 //==============================================
 
+/*
+ * add new event
+ */
 $app->post('/module/calendar/add', function(Request $req, Response $res){
     $containerId = $_POST["containerId"];
     $title = $_POST["title"];
@@ -632,6 +726,9 @@ $app->post('/module/calendar/add', function(Request $req, Response $res){
     return $res->withJson(array("id"=>$id, "containerId"=>$containerId, "title"=>$title, "date"=>$date, "time"=>$time));
 });
 
+/**
+ * delete event
+ */
 $app->get('/module/calendar/delete', function(Request $req, Response $res){
     $moduleId = $req->getQueryParam("moduleId",0);
     $db = new DbHandler($this->dbLog);
@@ -643,7 +740,9 @@ $app->get('/module/calendar/delete', function(Request $req, Response $res){
 
 //===============MODULE FORUM============
 //==============================================
-
+/**
+ * add a ne forum
+ */
 $app->post('/module/forum/addForum', function(Request $req, Response $res){
     $this->log->addInfo("/addForum is called");
     $db = new DbHandler($this->dbLog);
@@ -660,6 +759,9 @@ $app->post('/module/forum/addForum', function(Request $req, Response $res){
     return $res->withStatus(500);
 });
 
+/**
+ * delete forum
+ */
 $app->get('/module/forum/deleteForum',function(Request $req, Response $res){
     $this->log->addInfo("deleteForum is called");
     $topicId = $req->getQueryParam("topicId",0);
@@ -671,6 +773,9 @@ $app->get('/module/forum/deleteForum',function(Request $req, Response $res){
     return $res->withHeader(404, "Not FOUND");
 });
 
+/**
+ * update title and description
+ */
 $app->post('/module/forum/update',function(Request $req, Response $res){
     $this->log->addInfo("/updateForum is called");
     $moduleId = $_POST["topicId"];
@@ -683,6 +788,9 @@ $app->post('/module/forum/update',function(Request $req, Response $res){
     return $res->withHeader(500);
 });
 
+/**
+ * load Details of a topics (return list of comment)
+ */
 $app->get('/module/forum/topic/loadDetails',function(Request $req, Response $res){
     $topicId = $req->getQueryParam("topicId",0);
     $this->log->addInfo("load Comments for topic ".$topicId);
@@ -695,6 +803,9 @@ $app->get('/module/forum/topic/loadDetails',function(Request $req, Response $res
     }
 });
 
+/**
+ * add a comment to a topic
+ */
 $app->post('/module/forum/topic/addComment',function(Request $req, Response $res){
     $this->log->addInfo("/addComment is called");
     $db = new DbHandler($this->dbLog);
@@ -709,6 +820,9 @@ $app->post('/module/forum/topic/addComment',function(Request $req, Response $res
     return $res->withStatus(500);
 });
 
+/**
+ * delete a comment from a topic
+ */
 $app->get('/module/forum/topic/deleteComment',function(Request $req, Response $res){
     $this->log->addInfo("deleteComment is called");
     $commentId = $req->getQueryParam("commentId",0);
@@ -720,6 +834,9 @@ $app->get('/module/forum/topic/deleteComment',function(Request $req, Response $r
     return $res->withHeader(404, "Not FOUND");
 });
 
+/**
+ * modify a comment
+ */
 $app->post('/module/forum/topic/update',function(Request $req, Response $res){
     $this->log->addInfo("/updateComment is called");
     $commentId = $_POST["commentId"];
