@@ -1,0 +1,6 @@
+/src/vendor/*
+/src/logs/*
+/res/module/*
+/res/app/*
+!/res/app/default/icon.png
+!/res/app/default/background.png
